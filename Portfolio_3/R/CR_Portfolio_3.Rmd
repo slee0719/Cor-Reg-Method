@@ -1,0 +1,68 @@
+---
+title: "CR_Portfolio_3"
+author: "Seunghun Lee"
+date: "`r Sys.time()`"
+output: 
+  pdf_document:
+    toc: true
+    toc_depth: 2
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(include = TRUE)
+```
+
+```{r, include = FALSE}
+library(dplyr)
+library(ggplot2)
+library(psych)
+library(tidyverse)
+```
+
+## Research Question
+A researcher was interested in investigating whether temperature in Celsius degree was a predictor of the burned area of the forest (in ha) in Portugal. The researcher hypothesized that the prediction relationship would be positive. Using the sample of data for the 517 instances found in forestfires.csv, test the researcher’s hypothesis using $\alpha$	 of 0.05
+
+```{r, out.width="70%"}
+# http://archive.ics.uci.edu/ml/datasets/Forest+Fires
+fire <- read.csv("./data/forestfires.csv") %>%
+   select(temp, area) 
+
+# Descriptive statistics
+fire %>%
+  describe()
+
+fire %>%
+  ggplot(aes(y=area, x=temp)) +
+  geom_smooth(method = 'lm') 
+```
+
+## Hypotheses
+* $H_{1}$: Temperature in Celsius degree is a positive predictor of the burned area of the forest (ha) in Portugal
+* $H_{0}$: Temperature in Celsius degree is not a positive predictor of the burned area of the forest (ha) in Portugal
+
+## Critical test statistic
+```{r}
+qt(p = 0.05, df = 515, lower.tail = FALSE)
+```
+* $\alpha$ = 0.05, one-tailed, df = 517 -2 = 515, t(df= 515) = +1.648
+
+## Sample test statistic results
+```{r}
+# Unstandardized coefficient estimates
+mod <- lm(area ~ temp, data = fire)
+summary(mod)
+```
+* **The simple test statistic t = 2.231**
+
+```{r}
+# Standardized coefficient estimates
+scale_mod <- lm(scale(area)~scale(temp), data = fire)
+summary(scale_mod)
+```
+* **Standardized slope = 9.74e-02**
+
+## Conclusion
+* Reject the null hypothesis 
+* Temperature in Celsius degree is a significant positive predictor of the burned area of the forest (ha) in Portugal
+* [B = 1.07, $\beta$ = 0.0978, t(515) = 2.231, p < 0.05]
+* The results indicate that for every one Celsius degree, the burned area of the forest in Portugal increased by 1.07 ha

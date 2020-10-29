@@ -1,0 +1,67 @@
+---
+title: "Portfolio of Research Questions"
+author: "Seunghun Lee"
+date: "Sep 22, 2020"
+output: 
+  pdf_document:
+    toc: true
+    toc_depth: 2
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Research Question
+Researchers were interested in whether the correlation between temperature of each day and the number of registered shared-bike users were positivley related. They obtained a random sample of 731 days and their values for 
+temperature (Celcius), which was derived via (t-t_min)/(t_max-t_min), t_min = -8, t_max = +39 (only in hourly scale), and for registered users and investigated their research question using an alpha of 0.05. (Fanaee-T, Hadi and Gama, Joao, 2013)
+
+```{r}
+# https://archive.ics.uci.edu/ml/datasets/bike+sharing+dataset
+day <- read.csv('./data/day.csv') 
+day_temp_reg <- subset(day, select = c('temp', 'registered')) # subsetting the necessary columns
+head(day_temp_reg)
+summary(day_temp_reg)
+```
+
+## Hypotheses
+H1: There is a positive relationship betwen temperature and the number of registered bike user.
+$\rho > 0$ \
+H0: There is not a positive relationship between temperature and the number of registered bike user.
+$\rho \le 0$ \
+
+## Critical test statistic
+df = 731 - 2 = 729, $\alpha$-level = 0.05, one-tailed,
+```{r}
+abs(qt(0.05, 729))
+```
+Critical t(0.05, df = 729) = 1.647
+
+## Test statistic
+```{r}
+# Defining necessary variables
+temp <- day$temp 
+registered <- day$registered
+```
+
+1. Computation by hand
+```{r, indent = '   '}
+tr_byhand <- function(data1, data2){
+  r <- cor(data1, data2)
+  Sr <- sqrt((1-r^2)/(length(data1)-2))
+  Tr <- r/Sr
+  print(c(r = r, t = Tr))
+}
+tr_byhand(temp, registered)
+# r = 0.54, t = 17.323 
+```
+
+2. Test statistic via `cor.test` fuction
+```{r, indent = '   '}
+cor.test(temp, registered, alternative = 'greater')
+```
+
+## Conclusion
+* Reject the null hypothesis (H0)\
+* There is a significant positive relationship between temperature and the number of registered users \
+* [r= 0.54, t(729) = 17.323, p < 0.05]
