@@ -1,0 +1,114 @@
+---
+title: "CR_Portfolio_4"
+author: "Seunghun Lee"
+date: "`r Sys.time()`"
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 2
+---
+
+## Research Question
+* A researcher was interested in investigating whether the pH level and alcohol level were significant predictors of the quality of Portuguese red wine. Both predictors were mean-centered. Using the sample of data for 1599 cases found in `winequality-red.csv`, test the researcher’s hypothesis using $\alpha$ of 0.05.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, include = FALSE}
+library(dplyr)
+library(ggplot2)
+library(stargazer)
+library(ggpubr)
+library(gridExtra)
+```
+
+```{r}
+# https://archive.ics.uci.edu/ml/datasets/Wine+Quality
+wine <- read.csv("./data/winequality-red.csv", sep = ";") %>%
+  select(quality, pH, alcohol)
+# Checking the missing value
+which(is.na(wine) == TRUE)
+```
+
+## Descriptive statistics
+```{r}
+wine %>% str()
+wine %>% summary()
+```
+
+```{r, warning = FALSE}
+p1 <- wine %>%
+  ggplot(aes(x = pH, y = quality)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+p2 <- wine %>%
+  ggplot(aes(x = alcohol, y = quality))+
+  geom_point() +
+  geom_smooth(method = "lm")
+grid.arrange(p1, p2,
+             ncol = 2, nrow = 1)
+```
+\
+\
+
+## Hypotheses
+* $H_{1A}$: The predictors - pH level and alcohol level - explain variability in the quality of red wine.
+* $H_{0A}$: The predictors - pH level and alcohol level - don't explain variability in the quality of red wine.
+\
+* $H_{1B}$: The pH level (while controlling for the alcohol level) is a negative predictor of the quality of red wine.
+* $H_{0B}$: The pH level (while controlling for the alcohol level) is not a negative predictor of the quality of red wine.
+\
+* $H_{1C}$: The alcohol level (while controlling for the pH level) is a positive predictor of the quality of red wine.
+* $H_{0C}$: The alcohol level (while controlling for the pH level) is not a positive predictor of the quality of red wine.
+\
+* $H_{1D}$: The quality of red wine with the mean level of pH and the mean level of alcohol is greater than zero.
+* $H_{0D}$: The quality of red wine with the mean level of pH and the mean level of alcohol is not greater than zero.
+
+## Critical test statistic
+```{r}
+# Critical t 
+qt(0.95, df = 1596)
+qt(0.05, df = 1596)
+# Critical F
+qf(0.95, df1 = 2, df2 = 1596)
+```
+* **The critical F statistic = +3.001**
+* **The critical t statistic = +-1.646**
+
+* For testing $H_{0A}$: $\alpha$ = 0.05, $df_{reg}$ = 2, $df{Error}$ = 1596; critical **$F$(2,1596) = 3.001**
+* For testing $H_{0B}$: $\alpha$ = 0.05, $df$ = 1596; critical **$t$(1596) = -1.645**
+* For testing $H_{0C}$ and $H_{0D}$: $\alpha$ = 0.05, $df$ = 1596; critical **$t$(1596) = 1.645**
+
+## Sample test statistic results
+```{r, warning = FALSE}
+# Mean-centered data
+wine$pH.ctrd <- scale(wine$pH, 
+                      center = TRUE,
+                      scale = FALSE)
+wine$alcohol.ctrd <- scale(wine$alcohol, 
+                           center = TRUE,
+                           scale = FALSE)
+# Models
+mod1 <- lm(quality ~ pH.ctrd + alcohol.ctrd, data = wine)
+mod2 <- lm(scale(quality) ~  scale(pH.ctrd) + scale(alcohol.ctrd), data = wine)
+summary(mod1)
+summary(mod2)
+```
+
+## Conclusion
+* **For testing $H_{0A}$**: Reject $H_{0A}$ and conclude that the predictors - pH level and alcohol level - explain a significant amount of variability in the quality of red wine.
+* [$R^{2}$ = 0.252, $R^{2}_{adj}$ = 0.2511, $F$(2, 1596) = 268.9, $p$ < 0.05].
+* Together, the pH level and alcohol level explain about 25.1% of the variability in the quality of red wine.
+\
+* **For testing $H_{0B}$**: Reject $H_{0B}$ and infer that the pH level (while controlling for the alcohol level) is a significant negative predictor of the quality of red wine.
+* [$B$ = -0.850, $\beta$ = -0.163, $t$(1596) = -7.347, $p$ < 0.05].
+* The results indicate that, controlling for the alcohol level, the higher pH level, the lower wine quality will be. Specifically, for two wines with the same alcohol level, for the wine with one higher pH level, that wine is predicted to be 0.850 points lower on the quality.
+\
+* **For testing $H_{0C}$**: Reject $H_{0C}$ and infer that the alcohol level (while controlling for the pH level) is a significant positive predictor of the quality of red wine.
+* [$B$ = 0.386, $\beta$ = 0.510, $t$(1596) = 23.036, $p$ < 0.05].
+* The results indicate that, controlling for the pH level, the higher alcohol level, the higher wine quality will be. Specifically, for two wines with the same pH level, for the wine with one higher alcohol level, that wine is predicted to be 0.386 points higher on the quality.
+\
+* **For testing $H_{0D}$**: Reject $H_{0D}$ and infer that the quality of red wine with the average of pH level and average level of alcohol level is significantly greater than zero.
+* [$B$ = 5.636, $t$(1596) = 322.48, $p$ < 0.05].
+* The intercept is interpreted as the predicted quality (estimated to be 5.636) for a wine at the mean on pH level and at the mean on alcohol level.
